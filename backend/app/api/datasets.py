@@ -9,6 +9,12 @@ from app.schemas.datasets import (
     DatasetSchema,
     DatasetSummary,
 )
+from app.schemas.rag import (
+    DatasetIndexRequest,
+    DatasetIndexResponse,
+    DatasetSearchRequest,
+    DatasetSearchResponse,
+)
 from app.services.datasets import (
     create_dataset,
     get_dataset,
@@ -16,6 +22,7 @@ from app.services.datasets import (
     load_dataset,
     read_dataframe,
 )
+from app.services.rag import index_dataset, search_dataset
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
@@ -73,3 +80,26 @@ def query_dataset(dataset_id: str, payload: DatasetQueryRequest) -> DatasetQuery
         max_rows=settings.query_max_rows,
     )
     return DatasetQueryResponse(dataset_id=dataset_id, columns=columns, rows=rows)
+
+
+@router.post("/{dataset_id}/index", response_model=DatasetIndexResponse)
+def index_dataset_endpoint(dataset_id: str, payload: DatasetIndexRequest) -> DatasetIndexResponse:
+    result = index_dataset(
+        dataset_id,
+        columns=payload.columns,
+        max_rows=payload.max_rows,
+        rows_per_doc=payload.rows_per_doc,
+        reindex=payload.reindex,
+    )
+    return DatasetIndexResponse(dataset_id=dataset_id, **result)
+
+
+@router.post("/{dataset_id}/search", response_model=DatasetSearchResponse)
+def search_dataset_endpoint(dataset_id: str, payload: DatasetSearchRequest) -> DatasetSearchResponse:
+    results = search_dataset(
+        dataset_id,
+        query=payload.query,
+        top_k=payload.top_k,
+        doc_types=payload.doc_types,
+    )
+    return DatasetSearchResponse(dataset_id=dataset_id, results=results)

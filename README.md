@@ -1,6 +1,6 @@
 # ai-data-copilot
 
-Backend foundation for an AI & Big Data product API. No AI or RAG at this stage.
+Backend foundation for an AI & Big Data product API with RAG v1 retrieval (no LLM responses yet).
 
 ## Stack
 - Python 3.11
@@ -12,6 +12,7 @@ Backend foundation for an AI & Big Data product API. No AI or RAG at this stage.
    - `cp .env.example .env`
 2) Start:
    - `docker compose up --build`
+   - Qdrant is exposed on `http://localhost:6333`
 
 ## Health & Docs
 - Health: `http://localhost:8000/health`
@@ -24,6 +25,8 @@ Backend foundation for an AI & Big Data product API. No AI or RAG at this stage.
 - `GET /datasets/{dataset_id}/preview`
 - `GET /datasets/{dataset_id}/schema`
 - `POST /datasets/{dataset_id}/query`
+- `POST /datasets/{dataset_id}/index`
+- `POST /datasets/{dataset_id}/search`
 
 ## Example Requests
 Upload a CSV:
@@ -63,12 +66,34 @@ curl -X POST http://localhost:8000/datasets/<dataset_id>/query \
   -d '{"columns":["col1","country"],"filters":{"country":"FR"},"limit":10}'
 ```
 
+Index a dataset (RAG v1 retrieval):
+```
+curl -X POST http://localhost:8000/datasets/<dataset_id>/index \
+  -H "Content-Type: application/json" \
+  -d '{"columns":["col1","country"],"max_rows":50000,"rows_per_doc":10,"reindex":true}'
+```
+
+Search a dataset (returns passages + citations):
+```
+curl -X POST http://localhost:8000/datasets/<dataset_id>/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"top countries","top_k":5,"doc_types":["summary","rows"]}'
+```
+
 ## Environment Variables
 - `STORAGE_DIR`
 - `MAX_UPLOAD_MB`
 - `PREVIEW_MAX_ROWS`
 - `QUERY_MAX_ROWS`
 - `SAMPLE_ROWS`
+- `QDRANT_HOST`
+- `QDRANT_PORT`
+- `QDRANT_PATH`
+- `RAG_COLLECTION_NAME`
+- `RAG_EMBEDDING_MODEL`
+- `RAG_ROWS_PER_DOC`
+- `RAG_MAX_ROWS_TO_INDEX`
+- `RAG_EMBED_BATCH_SIZE`
 
 ## Tests
 Install dependencies and run:
