@@ -1,6 +1,6 @@
 # ai-data-copilot
 
-Backend foundation for an AI & Big Data product API with RAG v1 retrieval (no LLM responses yet).
+Backend foundation for an AI & Big Data product API with RAG retrieval + chat LLM responses.
 
 ## Stack
 - Python 3.11
@@ -27,6 +27,10 @@ Backend foundation for an AI & Big Data product API with RAG v1 retrieval (no LL
 - `POST /datasets/{dataset_id}/query`
 - `POST /datasets/{dataset_id}/index`
 - `POST /datasets/{dataset_id}/search`
+- `POST /datasets/{dataset_id}/insights`
+- `POST /datasets/{dataset_id}/charts/suggest`
+- `POST /datasets/{dataset_id}/report`
+- `POST /chat`
 
 ## Example Requests
 Upload a CSV:
@@ -80,6 +84,32 @@ curl -X POST http://localhost:8000/datasets/<dataset_id>/search \
   -d '{"query":"top countries","top_k":5,"doc_types":["summary","rows"]}'
 ```
 
+Compute insights (cached unless force_recompute):
+```
+curl -X POST http://localhost:8000/datasets/<dataset_id>/insights \
+  -H "Content-Type: application/json" \
+  -d '{"sample_rows":50000,"target_column":null,"force_recompute":false}'
+```
+
+Suggest chart specs:
+```
+curl -X POST http://localhost:8000/datasets/<dataset_id>/charts/suggest \
+  -H "Content-Type: application/json" \
+  -d '{"question":"distribution","max_charts":3}'
+```
+
+Generate executive report:
+```
+curl -X POST http://localhost:8000/datasets/<dataset_id>/report
+```
+
+Chat with a dataset (RAG first: index before chat):
+```
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"dataset_id":"<dataset_id>","message":"What are the top countries?","top_k":5,"doc_types":["summary","rows"],"response_format":"markdown"}'
+```
+
 ## Environment Variables
 - `STORAGE_DIR`
 - `MAX_UPLOAD_MB`
@@ -94,6 +124,26 @@ curl -X POST http://localhost:8000/datasets/<dataset_id>/search \
 - `RAG_ROWS_PER_DOC`
 - `RAG_MAX_ROWS_TO_INDEX`
 - `RAG_EMBED_BATCH_SIZE`
+- `LLM_PROVIDER` (default: `openai_compatible`)
+- `LLM_BASE_URL`
+- `LLM_API_KEY`
+- `LLM_MODEL`
+- `LLM_TEMPERATURE` (default: `0.2`)
+- `LLM_MAX_TOKENS` (default: `600`)
+- `INSIGHTS_SAMPLE_MAX`
+- `INSIGHTS_MISSING_THRESHOLD` (default: `0.3`)
+- `INSIGHTS_OUTLIER_METHOD` (default: `iqr` or `zscore`)
+- `CHARTS_MAX_POINTS` (default: `50`)
+
+Example LLM config (OpenAI-compatible):
+```
+LLM_PROVIDER=openai_compatible
+LLM_BASE_URL=https://api.openai.com
+LLM_API_KEY=sk-...
+LLM_MODEL=gpt-4o-mini
+LLM_TEMPERATURE=0.2
+LLM_MAX_TOKENS=600
+```
 
 ## Tests
 Install dependencies and run:

@@ -1,6 +1,13 @@
 from fastapi import APIRouter, File, Query, UploadFile
 
 from app.core.config import settings
+from app.insights.models import (
+    ChartsSuggestRequest,
+    ChartsSuggestResponse,
+    InsightsRequest,
+    InsightsResponse,
+    ReportResponse,
+)
 from app.schemas.datasets import (
     DatasetMetadata,
     DatasetPreview,
@@ -15,6 +22,7 @@ from app.schemas.rag import (
     DatasetSearchRequest,
     DatasetSearchResponse,
 )
+from app.services.charts_service import suggest_charts
 from app.services.datasets import (
     create_dataset,
     get_dataset,
@@ -22,7 +30,9 @@ from app.services.datasets import (
     load_dataset,
     read_dataframe,
 )
+from app.services.insights_service import get_dataset_insights
 from app.services.rag import index_dataset, search_dataset
+from app.services.report_service import generate_report
 
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
@@ -103,3 +113,24 @@ def search_dataset_endpoint(dataset_id: str, payload: DatasetSearchRequest) -> D
         doc_types=payload.doc_types,
     )
     return DatasetSearchResponse(dataset_id=dataset_id, results=results)
+
+
+@router.post("/{dataset_id}/insights", response_model=InsightsResponse)
+def insights_dataset_endpoint(
+    dataset_id: str,
+    payload: InsightsRequest | None = None,
+) -> InsightsResponse:
+    return get_dataset_insights(dataset_id, payload or InsightsRequest())
+
+
+@router.post("/{dataset_id}/charts/suggest", response_model=ChartsSuggestResponse)
+def charts_suggest_dataset_endpoint(
+    dataset_id: str,
+    payload: ChartsSuggestRequest | None = None,
+) -> ChartsSuggestResponse:
+    return suggest_charts(dataset_id, payload or ChartsSuggestRequest())
+
+
+@router.post("/{dataset_id}/report", response_model=ReportResponse)
+def report_dataset_endpoint(dataset_id: str) -> ReportResponse:
+    return generate_report(dataset_id)

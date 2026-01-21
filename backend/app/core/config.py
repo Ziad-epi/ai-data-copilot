@@ -18,6 +18,16 @@ class Settings(BaseSettings):
     rag_rows_per_doc: int = 10
     rag_max_rows_to_index: int = 50000
     rag_embed_batch_size: int = 64
+    llm_provider: str = "openai_compatible"
+    llm_base_url: str | None = None
+    llm_api_key: str | None = None
+    llm_model: str | None = None
+    llm_temperature: float = 0.2
+    llm_max_tokens: int = 600
+    insights_sample_max: int = 50000
+    insights_missing_threshold: float = 0.3
+    insights_outlier_method: str = "iqr"
+    charts_max_points: int = 50
 
     class Config:
         env_file = ".env"
